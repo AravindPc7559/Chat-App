@@ -144,16 +144,24 @@ export const deleteConversation = async (req, res) => {
         // Bidirectional contact removal:
         // When B deletes A, remove A from B's contacts AND B from A's contacts
         // 1. Remove userToDelete from currentUser's contacts
-        currentUser.contacts = currentUser.contacts.filter(
-            contactId => contactId.toString() !== userId
-        );
+        if (currentUser.contacts && Array.isArray(currentUser.contacts)) {
+            currentUser.contacts = currentUser.contacts.filter(
+                contactId => contactId.toString() !== userId
+            );
+        } else {
+            currentUser.contacts = [];
+        }
         await currentUser.save();
 
         // 2. Remove currentUser from otherUser's contacts (bidirectional)
         if (otherUser) {
-            otherUser.contacts = otherUser.contacts.filter(
-                contactId => contactId.toString() !== loggedInUserId.toString()
-            );
+            if (otherUser.contacts && Array.isArray(otherUser.contacts)) {
+                otherUser.contacts = otherUser.contacts.filter(
+                    contactId => contactId.toString() !== loggedInUserId.toString()
+                );
+            } else {
+                otherUser.contacts = [];
+            }
             await otherUser.save();
         }
 

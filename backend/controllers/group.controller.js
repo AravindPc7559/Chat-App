@@ -155,11 +155,22 @@ export const sendGroupMessage = async (req, res) => {
         // Populate sender for socket emission
         await newMessage.populate("senderId", "-password");
 
+        // Convert message to plain object for socket emission
+        const messageObj = newMessage.toObject();
+        messageObj.groupId = groupId.toString();
+
+        // Get all unique member IDs (admin is already in members, but ensure we have all)
+        const allMemberIds = new Set();
+        allMemberIds.add(group.admin.toString());
+        group.members.forEach(memberId => {
+            allMemberIds.add(memberId.toString());
+        });
+
         // Emit to all group members
-        group.members.forEach((memberId) => {
-            const memberSocketId = getReceiverSocketId(memberId.toString());
+        allMemberIds.forEach((memberId) => {
+            const memberSocketId = getReceiverSocketId(memberId);
             if (memberSocketId) {
-                io.to(memberSocketId).emit("newGroupMessage", newMessage);
+                io.to(memberSocketId).emit("newGroupMessage", messageObj);
             }
         });
 
