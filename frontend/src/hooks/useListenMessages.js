@@ -14,7 +14,7 @@ const useListenMessages = () => {
             const sound = new Audio(notificationSound);
             sound.play();
 
-            if (selectedConversation?._id === newMessage.senderId) {
+            if (selectedConversation?._id === newMessage.receiverId || selectedConversation?._id === newMessage.senderId) {
                 setMessages([...messages, newMessage]);
             } else {
                 // Increment unread count
@@ -26,7 +26,27 @@ const useListenMessages = () => {
             }
         });
 
-        return () => socket?.off("newMessage");
+        socket?.on("newGroupMessage", (newMessage) => {
+            newMessage.shouldShake = true;
+            const sound = new Audio(notificationSound);
+            sound.play();
+
+            if (selectedConversation?._id === newMessage.groupId && selectedConversation?.type === "group") {
+                setMessages([...messages, newMessage]);
+            } else {
+                // Increment unread count for group
+                const groupId = newMessage.groupId;
+                setUnreadCounts({
+                    ...unreadCounts,
+                    [groupId]: (unreadCounts[groupId] || 0) + 1
+                });
+            }
+        });
+
+        return () => {
+            socket?.off("newMessage");
+            socket?.off("newGroupMessage");
+        };
     }, [socket, setMessages, messages, selectedConversation, unreadCounts, setUnreadCounts]);
 };
 export default useListenMessages;

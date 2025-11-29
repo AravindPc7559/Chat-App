@@ -8,14 +8,16 @@ const LogoutButton = () => {
         <div className='w-full'>
             {!loading ? (
                 <button
-                    className='flex items-center gap-2 w-full p-2 rounded-lg hover:bg-red-50 text-red-600 hover:text-red-700 transition-colors'
+                    className='flex items-center justify-center gap-2 w-full p-3 rounded-xl hover:bg-red-50 text-red-600 hover:text-red-700 transition-all duration-200 font-medium hover:shadow-md'
                     onClick={logout}
                 >
-                    <BiLogOut className='w-6 h-6' />
-                    <span className='font-semibold'>Logout</span>
+                    <BiLogOut className='w-5 h-5' />
+                    <span>Logout</span>
                 </button>
             ) : (
-                <span className='loading loading-spinner text-red-600'></span>
+                <div className='flex items-center justify-center'>
+                    <span className='loading loading-spinner text-red-600'></span>
+                </div>
             )}
         </div>
     );

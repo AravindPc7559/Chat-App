@@ -73,8 +73,17 @@ export const addContact = async (req, res) => {
             return res.status(400).json({ error: "User already in contacts" });
         }
 
+        // Bidirectional contact addition:
+        // When B adds A, both A and B should appear in each other's General list
+        // 1. Add userToAdd to currentUser's contacts
         currentUser.contacts.push(userToAdd._id);
         await currentUser.save();
+
+        // 2. Add currentUser to userToAdd's contacts (bidirectional)
+        if (!userToAdd.contacts.includes(loggedInUserId)) {
+            userToAdd.contacts.push(loggedInUserId);
+            await userToAdd.save();
+        }
 
         res.status(200).json(userToAdd);
     } catch (error) {
@@ -126,10 +135,27 @@ export const deleteConversation = async (req, res) => {
         const loggedInUserId = req.user._id;
 
         const currentUser = await User.findById(loggedInUserId);
+        if (!currentUser) {
+            return res.status(404).json({ error: "Current user not found" });
+        }
+
+        const otherUser = await User.findById(userId);
+
+        // Bidirectional contact removal:
+        // When B deletes A, remove A from B's contacts AND B from A's contacts
+        // 1. Remove userToDelete from currentUser's contacts
         currentUser.contacts = currentUser.contacts.filter(
             contactId => contactId.toString() !== userId
         );
         await currentUser.save();
+
+        // 2. Remove currentUser from otherUser's contacts (bidirectional)
+        if (otherUser) {
+            otherUser.contacts = otherUser.contacts.filter(
+                contactId => contactId.toString() !== loggedInUserId.toString()
+            );
+            await otherUser.save();
+        }
 
         await Conversation.findOneAndDelete({
             participants: { $all: [loggedInUserId, userId] }

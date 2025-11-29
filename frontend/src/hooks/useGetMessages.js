@@ -10,7 +10,16 @@ const useGetMessages = () => {
         const getMessages = async () => {
             setLoading(true);
             try {
-                const res = await fetch(`/api/messages/${selectedConversation._id}`);
+                let res;
+                if (selectedConversation?.type === "group") {
+                    res = await fetch(`/api/groups/${selectedConversation._id}/messages`, {
+                        credentials: "include",
+                    });
+                } else {
+                    res = await fetch(`/api/messages/${selectedConversation._id}`, {
+                        credentials: "include",
+                    });
+                }
                 const data = await res.json();
                 if (data.error) throw new Error(data.error);
                 setMessages(data);
@@ -22,7 +31,7 @@ const useGetMessages = () => {
         };
 
         if (selectedConversation?._id) getMessages();
-    }, [selectedConversation?._id, setMessages]);
+    }, [selectedConversation?._id, selectedConversation?.type, setMessages]);
 
     return { messages, loading };
 };
